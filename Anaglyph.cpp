@@ -5,12 +5,12 @@
 cv::Mat& Anaglyph::scaleAndMerge(cv::Mat& img1, cv::Mat& img2) const {
 
 
-    Eigen::Tensor<float, 3, Eigen::RowMajor> tensor1 = cvToTensor(img1);
-    Eigen::Tensor<float, 3, Eigen::RowMajor> tensor2 = cvToTensor(img2);
+    Eigen::Tensor<float, 3, Eigen::ColMajor> tensor1 = cvToColMajorTensor(img1);
+    Eigen::Tensor<float, 3, Eigen::ColMajor> tensor2 = cvToColMajorTensor(img2);
 
-    Eigen::Tensor<float, 3, Eigen::RowMajor> scaled_left = scaleTensor(tensor1, scale_matrix_left_, tensor1.dimensions()[0],tensor1.dimensions()[1]);
-    Eigen::Tensor<float, 3, Eigen::RowMajor> scaled_right = scaleTensor(tensor2, scale_matrix_right_, tensor1.dimensions()[0],tensor1.dimensions()[1]);
-    Eigen::Tensor<float, 3, Eigen::RowMajor> merged = scaled_left + scaled_right;
+    Eigen::Tensor<float, 3, Eigen::ColMajor> scaled_left = scaleWholeTensor(tensor1, scale_matrix_left_, tensor1.dimensions()[0],tensor1.dimensions()[1]);
+    Eigen::Tensor<float, 3, Eigen::ColMajor> scaled_right = scaleWholeTensor(tensor2, scale_matrix_right_, tensor1.dimensions()[0],tensor1.dimensions()[1]);
+    Eigen::Tensor<float, 3, Eigen::ColMajor> merged = scaled_left + scaled_right;
 
     cv::eigen2cv(merged, img1);
     img1 = rgb2bgr(img1);

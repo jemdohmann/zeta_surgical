@@ -64,6 +64,11 @@ Eigen::Tensor<float, 3, Eigen::RowMajor> cvToTensor(Mat& img) {
     cv::cv2eigen(img, a_tensor);
     return a_tensor;
 }
+Eigen::Tensor<float, 3, Eigen::ColMajor> cvToColMajorTensor(Mat& img) {
+  Eigen::Tensor<float, 3, Eigen::ColMajor> a_tensor(img.rows, img.cols, 3);
+    cv::cv2eigen(img, a_tensor);
+    return a_tensor;
+}
 
 cv::Mat loadSingleImageAsRGB(std::string path) {
   cv::Mat img = loadImage(path);
@@ -88,7 +93,7 @@ template<typename T>
 using  MatrixType = Eigen::Matrix<T,Eigen::Dynamic, Eigen::Dynamic>;
 
 template<typename Scalar,int rank, typename sizeType>
-auto Tensor_to_Matrix(const Eigen::Tensor<Scalar,rank, Eigen::RowMajor> &tensor,const sizeType rows,const sizeType cols)
+auto Tensor_to_Matrix(const Eigen::Tensor<Scalar,rank, Eigen::ColMajor> &tensor,const sizeType rows,const sizeType cols)
 {
     return Eigen::Map<const MatrixType<Scalar>> (tensor.data(), rows,cols);
 }
@@ -99,37 +104,54 @@ template<typename Scalar, typename... Dims>
 auto Matrix_to_Tensor(const MatrixType<Scalar> &matrix, Dims... dims)
 {
     constexpr int rank = sizeof... (Dims);
-    return Eigen::TensorMap<Eigen::Tensor<const Scalar, rank, Eigen::RowMajor>>(matrix.data(), {dims...});
+    return Eigen::TensorMap<Eigen::Tensor<const Scalar, rank, Eigen::ColMajor>>(matrix.data(), {dims...});
 }
 
 
-Eigen::Tensor<float, 3, Eigen::RowMajor>  scaleRow(const Eigen::Tensor<float, 3, Eigen::RowMajor>& input_tensor, const Eigen::Matrix3f& scale_matrix, int height, int width, int row) {
+Eigen::Tensor<float, 3, Eigen::ColMajor>  scaleRow(const Eigen::Tensor<float, 3, Eigen::ColMajor>& input_tensor, const Eigen::Matrix3f& scale_matrix, int height, int width, int row) {
   std::array<long, 3> offset = {row,0,0};
     std::array<long, 3> extent = {1,width,3};
     std::array<long, 2> shape = {width,3};
 
     // // Slice a row
-    Eigen::Tensor<float, 2, Eigen::RowMajor> row_tensor = input_tensor.slice(offset, extent).reshape(shape);
+    Eigen::Tensor<float, 2, Eigen::ColMajor> row_tensor = input_tensor.slice(offset, extent).reshape(shape);
 
     // // Convert to matrix and transpose 
-    Eigen::MatrixXf matrix = Tensor_to_Matrix(row_tensor, 3, width).transpose();
+    Eigen::MatrixXf matrix = Tensor_to_Matrix(row_tensor, width, 3);
 
     // // Multiply
-    Eigen::MatrixXf result = (matrix * scale_matrix.transpose()).transpose();
+    Eigen::MatrixXf result = matrix * scale_matrix.transpose();
 
     // // Cast back to rank-3 tensor
     return Matrix_to_Tensor(result, 1, width, 3);
 }
 
-Eigen::Tensor<float, 3, Eigen::RowMajor>  scaleTensor(const Eigen::Tensor<float, 3, Eigen::RowMajor>& input_tensor, const Eigen::Matrix3f& scale_matrix, int height, int width) {
+Eigen::Tensor<float, 3, Eigen::ColMajor>  scaleTensorByRow(const Eigen::Tensor<float, 3, Eigen::ColMajor>& input_tensor, const Eigen::Matrix3f& scale_matrix, int height, int width) {
 
-  Eigen::Tensor<float, 3, Eigen::RowMajor>  first_row = scaleRow(input_tensor, scale_matrix,  height,  width, 0);
+  Eigen::Tensor<float, 3, Eigen::ColMajor>  first_row = scaleRow(input_tensor, scale_matrix,  height,  width, 0);
   for(int i =1; i < height; i++) {
     // Scaling the ith row
-    Eigen::Tensor<float, 3, Eigen::RowMajor> ith_row = scaleRow(input_tensor, scale_matrix,  height,  width, i);
-    Eigen::Tensor<float, 3, Eigen::RowMajor> intermediate = first_row.concatenate(ith_row, 0);
+    Eigen::Tensor<float, 3, Eigen::ColMajor> ith_row = scaleRow(input_tensor, scale_matrix,  height,  width, i);
+    Eigen::Tensor<float, 3, Eigen::ColMajor> intermediate = first_row.concatenate(ith_row, 0);
     first_row = intermediate;
   }
   return first_row;
+}
+
+Eigen::Tensor<float, 3, Eigen::ColMajor>  scaleWholeTensor(const Eigen::Tensor<float, 3, Eigen::ColMajor>& input_tensor, const Eigen::Matrix3f& scale_matrix, int height, int width) {
+  std::array<long, 2> shape = {width,3};
+  std::array<long, 2> shape2 = {height * width, 3};
+  
+  // // Slice a row
+  Eigen::Tensor<float, 2, Eigen::ColMajor> row_tensor = input_tensor.reshape(shape2);
+  // // Convert to matrix and transpose 
+  Eigen::MatrixXf matrix = Tensor_to_Matrix(row_tensor, height * width, 3);
+
+  // // Multiply
+  Eigen::MatrixXf result = matrix * scale_matrix.transpose();
+
+  // // Cast back to rank-3 tensor
+  Eigen::Tensor<float, 3, Eigen::ColMajor> scaled_left = Matrix_to_Tensor(result, height,  width, 3);
+  return scaled_left;
 }
 
