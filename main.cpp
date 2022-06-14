@@ -6,8 +6,20 @@
 Anaglyph make_anaglyph(std::string id) {
     if(id == "color") {
         return ColorAnaglyph();
-    } else {
+    } else if(id == "true") {
         return TrueAnaglyph();
+    } else if(id == "halfcolor") {
+        return HalfColorAnaglyph();
+    } else if(id == "gray") {
+        return GrayAnaglyph();
+    } else if(id == "3dtv") {
+        return ThreeDTVAnaglyph();
+    } else if(id == "dubois") {
+        return DuBoisAnaglyph();
+    } else if(id == "roscoulx") {
+        return RoscoluxAnaglyph();
+    } else {
+        throw "Unkown anaglyph ID, valid IDs are: 'color', 'true','halfcolor', 'gray', '3dtv', 'dubois', 'roscoulx'";
     }
 }
 int main(int argc, char *argv[])
