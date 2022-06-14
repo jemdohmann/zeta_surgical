@@ -11,7 +11,8 @@ Anaglyph make_anaglyph(std::string id) {
     }
 }
 int main(int argc, char *argv[])
-{
+{   
+    Eigen::initParallel();
     auto start_time = std::chrono::high_resolution_clock::now();
     std::string anaglyph_name = "";
     std::string path1 = "";
