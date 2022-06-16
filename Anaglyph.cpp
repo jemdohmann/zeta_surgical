@@ -41,7 +41,6 @@ TrueAnaglyph::TrueAnaglyph() {
                         0.299, 0.587, 0.114;
 }
 
-
 GrayAnaglyph::GrayAnaglyph() {
 
         scale_matrix_left_ << 0.299, 0.587, 0.114,
@@ -53,7 +52,6 @@ GrayAnaglyph::GrayAnaglyph() {
                         0.299, 0.587, 0.114,
                         0.299, 0.587, 0.114;
 }
-
 
 ColorAnaglyph::ColorAnaglyph() {
 
@@ -79,3 +77,38 @@ HalfColorAnaglyph::HalfColorAnaglyph() {
                         0, 0, 1;
 }
 
+ThreeDTVAnaglyph::ThreeDTVAnaglyph() {
+
+        scale_matrix_left_ << 0, 0.7, 0.3,
+                        0, 0, 0,
+                        0, 0, 0;
+
+
+        scale_matrix_right_ << 0, 0, 0,
+                        0, 1, 0,
+                        0, 0, 1;
+}
+
+DuBoisAnaglyph::DuBoisAnaglyph() {
+
+        scale_matrix_left_ << 0.437, 0.449, 0.164,
+                        -.062, -.062, -.024,
+                        -.048, -.050, -.017;
+
+
+        scale_matrix_right_ << -.011, -.032, -.007,
+                        0.377, 0.761, 0.009,
+                        -.026, -.093, 1.234;
+}
+
+RoscoluxAnaglyph::RoscoluxAnaglyph() {
+
+        scale_matrix_left_ << 0.3185, 0.0769, 0.0109,
+                        0.1501, 0.0767, 0.0056,
+                        0.0007, -.002, 0.0156;
+
+
+        scale_matrix_right_ << 0.0174, 0.0484, 0.1402,
+                        0.0184, 0.1807, 0.0458,
+                        0.0286, 0.0991, 0.7662;
+}
